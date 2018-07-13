@@ -36,8 +36,11 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.container.StorageComponentContainer
+import org.jetbrains.kotlin.container.useInstance
 import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import org.jetbrains.kotlin.kapt3.Kapt3CommandLineProcessor.Companion.ANNOTATION_PROCESSORS_OPTION
 import org.jetbrains.kotlin.kapt3.Kapt3CommandLineProcessor.Companion.ANNOTATION_PROCESSOR_CLASSPATH_OPTION
 import org.jetbrains.kotlin.kapt3.Kapt3CommandLineProcessor.Companion.APT_MODE_OPTION
@@ -53,14 +56,15 @@ import org.jetbrains.kotlin.kapt3.Kapt3CommandLineProcessor.Companion.SOURCE_OUT
 import org.jetbrains.kotlin.kapt3.Kapt3CommandLineProcessor.Companion.STUBS_OUTPUT_DIR_OPTION
 import org.jetbrains.kotlin.kapt3.Kapt3CommandLineProcessor.Companion.USE_LIGHT_ANALYSIS_OPTION
 import org.jetbrains.kotlin.kapt3.Kapt3CommandLineProcessor.Companion.VERBOSE_MODE_OPTION
-import org.jetbrains.kotlin.kapt3.Kapt3ConfigurationKeys.INFO_AS_WARNINGS
 import org.jetbrains.kotlin.kapt3.base.Kapt
 import org.jetbrains.kotlin.kapt3.base.KaptPaths
 import org.jetbrains.kotlin.kapt3.base.log
 import org.jetbrains.kotlin.kapt3.util.MessageCollectorBackedKaptLogger
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
+import org.jetbrains.kotlin.resolve.TargetPlatform
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
+import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatform
 import org.jetbrains.kotlin.utils.decodePluginOptions
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -315,6 +319,19 @@ class Kapt3ComponentRegistrar : ComponentRegistrar {
         )
 
         AnalysisHandlerExtension.registerExtension(project, kapt3AnalysisCompletedHandlerExtension)
+        StorageComponentContainerContributor.registerExtension(project, KaptComponentContributor())
+    }
+
+    class KaptComponentContributor : StorageComponentContainerContributor {
+        override fun registerModuleComponents(
+            container: StorageComponentContainer,
+            platform: TargetPlatform,
+            moduleDescriptor: ModuleDescriptor
+        ) {
+            if (platform != JvmPlatform) return
+            container.useInstance(KaptAnonymousTypeTransformer())
+        }
+
     }
 
     /* This extension simply disables both code analysis and code generation.
@@ -341,6 +358,7 @@ class Kapt3ComponentRegistrar : ComponentRegistrar {
             return AnalysisResult.Companion.success(bindingTrace.bindingContext, module, shouldGenerateCode = false)
         }
     }
+
 }
 
 enum class AptMode {
