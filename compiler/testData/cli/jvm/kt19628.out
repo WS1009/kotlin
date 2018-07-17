@@ -1,0 +1,7 @@
+compiler/testData/cli/jvm/kt19628.kt:4:29: error: unresolved reference: CollapsedStringAdapter
+    @get:XmlJavaTypeAdapter(CollapsedStringAdapter::class)
+                            ^
+compiler/testData/cli/jvm/kt19628.kt:4:29: error: an annotation argument must be a compile-time constant
+    @get:XmlJavaTypeAdapter(CollapsedStringAdapter::class)
+                            ^
+COMPILATION_ERROR

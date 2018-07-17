@@ -691,6 +691,16 @@ public class BodyResolver {
             PropertyDescriptor descriptor = trace.getBindingContext().get(BindingContext.PRIMARY_CONSTRUCTOR_PARAMETER, parameter);
             if (descriptor != null) {
                 ForceResolveUtil.forceResolveAllContents(descriptor.getAnnotations());
+
+                PropertyGetterDescriptor getterDescriptor = descriptor.getGetter();
+                if (getterDescriptor != null) {
+                    ForceResolveUtil.forceResolveAllContents(getterDescriptor.getAnnotations());
+                }
+
+                PropertySetterDescriptor setterDescriptor = descriptor.getSetter();
+                if (setterDescriptor != null) {
+                    ForceResolveUtil.forceResolveAllContents(setterDescriptor.getAnnotations());
+                }
             }
         }
     }
